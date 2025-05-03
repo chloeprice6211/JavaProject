@@ -13,8 +13,7 @@ import itstep.learning.android_212.R;
 import itstep.learning.android_212.orm.ChatMessage;
 
 public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageViewHolder> {
-    private final List<ChatMessage> messages;   // дані для показу, що передаються ззовні
-
+    private final List<ChatMessage> messages;
     public ChatMessageAdapter(List<ChatMessage> messages) {
         this.messages = messages;
     }
@@ -23,14 +22,14 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageViewHold
     @Override
     public ChatMessageViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater
-                .from( parent.getContext() )
-                .inflate( R.layout.chat_message, parent, false );
-        return new ChatMessageViewHolder( view );
+                .from(parent.getContext())
+                .inflate(R.layout.chat_message,parent,false);
+        return new ChatMessageViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ChatMessageViewHolder holder, int position) {
-        holder.setChatMessage( messages.get( position ) );
+        holder.setChatMessage( messages.get( position ));
     }
 
     @Override
@@ -38,6 +37,3 @@ public class ChatMessageAdapter extends RecyclerView.Adapter<ChatMessageViewHold
         return messages.size();
     }
 }
-/*
-Посередник між даними (колекцією ORM) та представленням (контейнером)
- */

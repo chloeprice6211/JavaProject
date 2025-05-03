@@ -1,11 +1,14 @@
 <resources>
     <string name="app_name">Android-212</string>
-    <string name="home_title">Знайомство з Android</string>
-    <string name="home_btn_calc">Калькулятор</string>
-    <string name="home_btn_game">Жести. Гра.</string>
-    <string name="home_btn_anim">Анімації</string>
-    <string name="home_btn_rate">Курси валют</string>
-    <string name="home_btn_chat">Чат</string>
+    <string name="home_title">welcome</string>
+    <string name="home_btn_calc">calc</string>
+    <string name="home_btn_game">2048</string>
+    <string name="home_btn_anim">anims</string>
+    <string name="home_btn_rate">currency</string>
+    <string name="home_btn_chat">chat</string>
+    <string name="home_btn_qr">qr</string>
+    <string name="home_btn_timer">timer</string>
+    <string name="home_btn_password">password</string>
 
     <string name="chat_msg_sent">Надіслано</string>
 
@@ -18,8 +21,8 @@
     <string name="calc_btn_inv">1/x</string>
     <string name="calc_btn_square">x2</string>
     <string name="calc_btn_sqrt">2x</string>
-    <string name="calc_btn_div">/</string>
-    <string name="calc_btn_mul">*</string>
+    <string name="calc_btn_div">÷</string>
+    <string name="calc_btn_mul">×</string>
     <string name="calc_btn_sub">-</string>
     <string name="calc_btn_add">+</string>
     <string name="calc_btn_pm">+/-</string>
@@ -37,6 +40,7 @@
     <string name="calc_btn_9">9</string>
     <string name="calc_div_zero">Ділення на 0</string>
     <string name="calc_negative_sqrt">Не визначено</string>
+    <string name="calc_expression_format">%1$s %2$s</string>
     <!-- endregion -->
 
     <!-- region Game -->
@@ -54,6 +58,6 @@
     <string name="anim_tv_translate">Translate</string>
 
     <string name="rate_rate_tpl">₴ %f</string>
-    <string name="rate_alert_tpl">Курс на %s становить ₴ %f</string>
+    <string name="rate_alert_tpl">Код: %1$s (%2$d)\nДата: %3$s\nКурс: 1 %4$s = %5$.2f грн</string>
 
 </resources>

@@ -10,11 +10,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class OnSwipeListener implements View.OnTouchListener {
-    public void onSwipeBottom() { }   // Методи для перевантаження
-    public void onSwipeLeft()   { }   // в активностях, що потребують
-    public void onSwipeRight()  { }   // управління свайпами
+    public void onSwipeBottom() { }   //
+    public void onSwipeLeft()   { }   //
+    public void onSwipeRight()  { }   //
     public void onSwipeTop()    { }   //
-    // Загальна задача - аналізуючи жести викликати (або не викликати) один з методів
+
 
     private final GestureDetector gestureDetector;
 
@@ -30,8 +30,8 @@ public class OnSwipeListener implements View.OnTouchListener {
 
 
     private final class GestureListener extends GestureDetector.SimpleOnGestureListener {
-        private static final int minSwipeDistance = 25;
-        private static final int minSwipeVelocity = 25;
+        private static final int minSwipeDistance = 100;
+        private static final int minSwipeVelocity = 100;
 
         @Override
         public boolean onDown(@NonNull MotionEvent e) {
@@ -41,41 +41,29 @@ public class OnSwipeListener implements View.OnTouchListener {
         @Override
         public boolean onFling(@Nullable MotionEvent e1, @NonNull MotionEvent e2,
                                float velocityX, float velocityY) {
-            boolean isServed = false;
             try {
                 assert e1 != null;
                 float dx = e2.getX() - e1.getX();
                 float dy = e2.getY() - e1.getY();
-                float mx = Math.abs(dx);   // довжини проведення по
-                float my = Math.abs(dy);   // осях Х та Y
-                // Детальна задача: перевірити якого типу Fling - горизонтальний
-                // чи вертикальний, а також чи достатньо швидким і достатньо довгим є
-                // проведення
-                if( mx > 2 * my ) {   // визначаємо як горизонтальний
-                    if( mx >= minSwipeDistance && velocityX >= minSwipeVelocity ) {
-                        if( dx > 0 ) onSwipeRight();
+                float mx = Math.abs(dx);
+                float my = Math.abs(dy);
+
+                if (mx > my) {
+                    if (mx >= minSwipeDistance && Math.abs(velocityX) >= minSwipeVelocity) {
+                        if (dx > 0) onSwipeRight();
                         else onSwipeLeft();
-                        isServed = true;
+                        return true;
                     }
-                }
-                else if( my > 2 * mx ) {   // визначаємо як вертикальний
-                    if( my >= minSwipeDistance && velocityY >= minSwipeVelocity ) {
-                        if( dy > 0 ) onSwipeBottom();
+                } else {
+                    if (my >= minSwipeDistance && Math.abs(velocityY) >= minSwipeVelocity) {
+                        if (dy > 0) onSwipeBottom();
                         else onSwipeTop();
-                        isServed = true;
+                        return true;
                     }
                 }
-                // else - ігноруємо, не вважаємо за свайп
-            }
-            catch (Exception ignored) {}
-            return isServed;
+            } catch (Exception ignored) {}
+            return false;
         }
     }
 }
-/*
-Детектор жестів. Свайпи.
-Детектор жестів - аналог маніпуляторів (на кшталт "миші") для ПК.
-Але він значно відрізняється системою подій.
-Свайпи не є базовими жестами, тому для них створюють власний детектор.
-Свайп - послідовність двох подій: Down (торкання детектора) та Fling (проведення)
- */
+

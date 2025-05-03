@@ -29,6 +29,9 @@ public class MainActivity extends AppCompatActivity {
         findViewById( R.id.home_btn_anim ).setOnClickListener( this::onButtonAnim );
         findViewById( R.id.home_btn_rate ).setOnClickListener( this::onButtonRate );
         findViewById( R.id.home_btn_chat ).setOnClickListener( this::onButtonChat );
+        findViewById( R.id.home_btn_pass ).setOnClickListener( this::onButtonPassword );
+        findViewById( R.id.home_btn_timer ).setOnClickListener( this::onButtonTimer );
+        findViewById( R.id.home_btn_qr ).setOnClickListener( this::onButtonQr );
     }
 
     private void onButtonCalc( View view ) {
@@ -58,6 +61,23 @@ public class MainActivity extends AppCompatActivity {
     private void onButtonChat( View view ) {
         Intent activityIntent = new Intent(
                 MainActivity.this, ChatActivity.class );
+        startActivity( activityIntent );
+    }
+
+    private void onButtonPassword( View view ) {
+        Intent activityIntent = new Intent(
+                MainActivity.this, PasswordActivity.class );
+        startActivity( activityIntent );
+    }
+
+    private void onButtonTimer( View view ) {
+        Intent activityIntent = new Intent(
+                MainActivity.this, TimerActivity.class );
+        startActivity( activityIntent );
+    }
+    private void onButtonQr( View view ) {
+        Intent activityIntent = new Intent(
+                MainActivity.this, QrActivity.class );
         startActivity( activityIntent );
     }
 }

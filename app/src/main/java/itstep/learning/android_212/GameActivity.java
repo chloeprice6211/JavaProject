@@ -114,7 +114,12 @@ public class GameActivity extends AppCompatActivity {
         gameField.setOnTouchListener( new OnSwipeListener( this ) {
             @Override
             public void onSwipeBottom() {
-                Toast.makeText(GameActivity.this, "onSwipeBottom", Toast.LENGTH_SHORT).show();
+                if (moveDown()) {
+                    spawnTile();
+                    updateField();
+                } else {
+                    Toast.makeText(GameActivity.this, "NO Down move", Toast.LENGTH_SHORT).show();
+                }
             }
             @Override
             public void onSwipeLeft() {
@@ -140,9 +145,16 @@ public class GameActivity extends AppCompatActivity {
             }
             @Override
             public void onSwipeTop() {
-                Toast.makeText(GameActivity.this, "onSwipeTop", Toast.LENGTH_SHORT).show();
+                if (moveUp()) {
+                    spawnTile();
+                    updateField();
+                } else {
+                    Toast.makeText(GameActivity.this, "NO Up move", Toast.LENGTH_SHORT).show();
+                }
             }
         } );
+
+        findViewById(R.id.game_btn_new_game).setOnClickListener(v -> startNewGame());
         loadBestScore();
         startNewGame();
     }
@@ -158,11 +170,11 @@ public class GameActivity extends AppCompatActivity {
         if( savedState == null ) {
             new AlertDialog.Builder(this, android.R.style.ThemeOverlay_Material_Dialog_Alert)
                     .setIcon( android.R.drawable.ic_dialog_alert )
-                    .setTitle( "Дія неможлива" )
-                    .setMessage( "Немає збереженого руху. Множинні UNDO у платній підписці")
-                    .setPositiveButton( "Підписатись", (dlg, btn) -> {} )
-                    .setNegativeButton( "Продовжити", (dlg, btn) -> {} )
-                    .setNeutralButton( "Завершити", (dlg, btn) -> finish() )
+                    .setTitle( "alert!" )
+                    .setMessage( "you have used your free undo!")
+                    .setPositiveButton( "purshase premium", (dlg, btn) -> {} )
+                    .setNegativeButton( "continue", (dlg, btn) -> {} )
+                    .setNeutralButton( "end", (dlg, btn) -> finish() )
                     .show();
             return;
         }
@@ -290,15 +302,17 @@ public class GameActivity extends AppCompatActivity {
 
     private void startNewGame() {
         score = 0L;
+        savedState = null;  // Сброс UNDO
+
         for (int i = 0; i < N; i++) {
             for (int j = 0; j < N; j++) {
-                // tiles[i][j] = (int) Math.pow(2, i + j + 1);
-                // if(tiles[i][j] > 64) tiles[i][j] = 0;
                 tiles[i][j] = 0;
             }
         }
+
         spawnTile();
         spawnTile();
+
         updateField();
     }
 
@@ -392,6 +406,78 @@ public class GameActivity extends AppCompatActivity {
             this.bestScore = bestScore;
             this.tiles = tiles;
         }
+    }
+
+    private boolean moveUp() {
+        boolean res = shiftUp();
+        for (int j = 0; j < N; j++) {
+            for (int i = 0; i < N - 1; i++) {
+                if (tiles[i][j] == tiles[i + 1][j] && tiles[i][j] != 0) {
+                    tiles[i][j] *= 2;
+                    tiles[i + 1][j] = 0;
+                    res = true;
+                    score += tiles[i][j];
+                    tvTiles[i][j].setTag(collapseAnimation);
+                }
+            }
+        }
+        return shiftUp() || res;
+    }
+
+    private boolean shiftUp() {
+        boolean res = false;
+        for (int j = 0; j < N; j++) {
+            for (int k = 1; k < N; k++) {
+                for (int i = 0; i < N - 1; i++) {
+                    if (tiles[i][j] == 0 && tiles[i + 1][j] != 0) {
+                        tiles[i][j] = tiles[i + 1][j];
+                        tiles[i + 1][j] = 0;
+                        res = true;
+                        if (tvTiles[i + 1][j].getTag() != null) {
+                            tvTiles[i][j].setTag(tvTiles[i + 1][j].getTag());
+                            tvTiles[i + 1][j].setTag(null);
+                        }
+                    }
+                }
+            }
+        }
+        return res;
+    }
+
+    private boolean moveDown() {
+        boolean res = shiftDown();
+        for (int j = 0; j < N; j++) {
+            for (int i = N - 1; i > 0; i--) {
+                if (tiles[i][j] == tiles[i - 1][j] && tiles[i][j] != 0) {
+                    tiles[i][j] *= 2;
+                    tiles[i - 1][j] = 0;
+                    res = true;
+                    score += tiles[i][j];
+                    tvTiles[i][j].setTag(collapseAnimation);
+                }
+            }
+        }
+        return shiftDown() || res;
+    }
+
+    private boolean shiftDown() {
+        boolean res = false;
+        for (int j = 0; j < N; j++) {
+            for (int k = 1; k < N; k++) {
+                for (int i = N - 1; i > 0; i--) {
+                    if (tiles[i][j] == 0 && tiles[i - 1][j] != 0) {
+                        tiles[i][j] = tiles[i - 1][j];
+                        tiles[i - 1][j] = 0;
+                        res = true;
+                        if (tvTiles[i - 1][j].getTag() != null) {
+                            tvTiles[i][j].setTag(tvTiles[i - 1][j].getTag());
+                            tvTiles[i - 1][j].setTag(null);
+                        }
+                    }
+                }
+            }
+        }
+        return res;
     }
 }
 /*

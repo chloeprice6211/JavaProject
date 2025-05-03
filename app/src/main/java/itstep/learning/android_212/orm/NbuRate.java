@@ -11,6 +11,8 @@ import java.util.Locale;
 public class NbuRate {
     public static final SimpleDateFormat dateFormat =
             new SimpleDateFormat("dd.MM.yyyy", Locale.ROOT );
+    public static final SimpleDateFormat dateDayMonthFormat =
+            new SimpleDateFormat("dd.MM", Locale.ROOT );
 
     private int r030;
     private String txt;
@@ -18,19 +20,17 @@ public class NbuRate {
     private String cc;
     private Date exchangeDate;
 
-    public static NbuRate fromJsonObject( JSONObject obj ) throws JSONException {
-        NbuRate nbuRate = new NbuRate();
+    public static NbuRate fromJsonObject(JSONObject obj) throws JSONException {
+        NbuRate nbuRate = new NbuRate ();
         nbuRate.setR030( obj.getInt("r030") );
-        nbuRate.setTxt( obj.getString( "txt" ) );
-        nbuRate.setRate( obj.getDouble( "rate" ) );
-        nbuRate.setCc( obj.getString( "cc" ) );
+        nbuRate.setTxt( obj.getString("txt" ) );
+        nbuRate.setRate( obj.getDouble("rate" ) );
+        nbuRate.setCc( obj.getString("cc" ) );
         try {
-            nbuRate.setExchangeDate(
-                    dateFormat.parse(
-                            obj.getString("exchangedate") ) );
+            nbuRate.setExchangeDate(dateFormat.parse(obj.getString ( "exchangedate")));
         }
         catch( ParseException ex ) {
-            throw new JSONException( ex.getMessage() );
+            throw new JSONException(ex.getMessage());
         }
         return nbuRate;
     }
@@ -75,12 +75,3 @@ public class NbuRate {
         this.exchangeDate = exchangeDate;
     }
 }
-/*
-{
-    "r030": 36,
-    "txt": "Австралійський долар",
-    "rate": 26.0567,
-    "cc": "AUD",
-    "exchangedate": "12.03.2025"
-  },
- */

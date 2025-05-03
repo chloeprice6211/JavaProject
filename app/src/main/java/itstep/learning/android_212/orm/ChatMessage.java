@@ -70,11 +70,3 @@ public class ChatMessage {
         this.moment = moment;
     }
 }
-/*
-{
-  "id": "3384",
-  "author": "Test",
-  "text": "test",
-  "moment": "2024-12-06 21:26:06"
-}
- */

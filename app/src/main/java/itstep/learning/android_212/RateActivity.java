@@ -1,9 +1,11 @@
 package itstep.learning.android_212;
 
+import android.app.DatePickerDialog;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -14,6 +16,8 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,16 +27,26 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
+import itstep.learning.android_212.RateAdapter;
 import itstep.learning.android_212.orm.NbuRate;
 
 public class RateActivity extends AppCompatActivity {
-    private final static String nbuUrl = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?json";
+    private static final String nbuurl = "https://bank.gov.ua/NBUStatService/v1/statdirectory/exchange?date=%s&json";
     private LinearLayout ratesContainer;
-    private List<NbuRate> nbuRates;
+    private RecyclerView ratesRecyclerViewRight;
+    private List<NbuRate> nbuRates; // Один список для всех данных
     private Drawable rateBg;
+    private Button datePickerButton;
+    private Calendar calendar;
+    private SimpleDateFormat dateFormat;
+    private TextView selectedDateTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,116 +58,125 @@ public class RateActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
-        rateBg = AppCompatResources.getDrawable(
-                getApplicationContext(), R.drawable.rate_bg );
-        ratesContainer = findViewById( R.id.rate_container );
-        new Thread( this::loadRates ).start();
+        //rateBg = AppCompatResources.getDrawable(
+       //         getApplicationContext(), R.drawable.rate_ng
+        //);
+        ratesContainer = findViewById(R.id.rate_container);
+        ratesRecyclerViewRight = findViewById(R.id.ratesRecyclerViewRight);
+        datePickerButton = findViewById(R.id.datePickerButton);
+        calendar = Calendar.getInstance();
+        dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+        selectedDateTextView = findViewById(R.id.selectedDateTextView);
+
+        datePickerButton.setOnClickListener(v -> showDatePickerDialog());
+        loadRates(dateFormat.format(calendar.getTime()));
+        selectedDateTextView.setText("Дата: " + formatDateForDisplay(calendar.getTime()));
     }
 
-    private void loadRates() {
-        try( InputStream urlStream = new URL( nbuUrl ).openStream() ) {
-            String content = readStreamToString( urlStream );
-            JSONArray arr = new JSONArray( content ) ;
-            nbuRates = new ArrayList<>();
-            for (int i = 0; i < arr.length(); i++) {
-                nbuRates.add( NbuRate.fromJsonObject( arr.getJSONObject( i ) ) ) ;
+    private void showDatePickerDialog() {
+        DatePickerDialog datePickerDialog = new DatePickerDialog(
+                this,
+                (view, year, month, dayOfMonth) -> {
+                    calendar.set(year, month, dayOfMonth);
+                    String selectedDate = dateFormat.format(calendar.getTime());
+                    loadRates(selectedDate);
+                    selectedDateTextView.setText("Дата: " + formatDateForDisplay(calendar.getTime()));
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        );
+        datePickerDialog.show();
+    }
+
+    private void loadRates(String date) {
+        String url = String.format(nbuurl, date);
+        new Thread(() -> {
+            try (InputStream urlStream = new URL(url).openStream()) {
+                String content = readStreamToString(urlStream);
+                JSONArray arr = new JSONArray(content);
+                nbuRates = new ArrayList<>(); // Используем один список
+                for (int i = 0; i < arr.length(); i++) {
+                    nbuRates.add(NbuRate.fromJsonObject(arr.getJSONObject(i)));
+                }
+                runOnUiThread(this::showRates);
+            } catch (MalformedURLException e) {
+                Log.e("RateActivity::loadRates", "MalformedURLException:" + e.getMessage());
+            } catch (IOException e) {
+                Log.e("RateActivity::loadRates", "IOException:" + e.getMessage());
+            } catch (JSONException e) {
+                Log.e("RateActivity::loadRates", "JSONException:" + e.getMessage());
             }
-            runOnUiThread( this::showRates );
-        }
-        catch (MalformedURLException ex) {
-            Log.e("RateActivity::loadRates", "MalformedURLException: " + ex.getMessage());
-        }
-        catch (IOException ex) {
-            Log.e("RateActivity::loadRates", "IOException: " + ex.getMessage());
-        }
-        catch( JSONException ex ) {
-            Log.e("RateActivity::loadRates", "JSONException: " + ex.getMessage());
-        }
+        }).start();
     }
 
     private void showRates() {
-        for( NbuRate nbuRate : nbuRates ) {
-            ratesContainer.addView( rateView( nbuRate ) );
+        ratesContainer.removeAllViews();
+        for (NbuRate nbuRate : nbuRates) {
+            ratesContainer.addView(rateView(nbuRate));
         }
+
+        ratesRecyclerViewRight.setLayoutManager(new LinearLayoutManager(this));
+        RateAdapter rightAdapter = new RateAdapter(nbuRates); // Используем тот же список
+        ratesRecyclerViewRight.setAdapter(rightAdapter);
     }
 
-    private View rateView( NbuRate nbuRate ) {
+    private View rateView(NbuRate nbuRate) {
         LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         );
-        layoutParams.setMargins( 10, 5, 10, 5 );
+        layoutParams.setMargins(10, 5, 10, 5);
 
-        LinearLayout layout = new LinearLayout( RateActivity.this );
-        layout.setOrientation( LinearLayout.HORIZONTAL );
-        layout.setBackground( rateBg );
-        layout.setLayoutParams( layoutParams );
+        LinearLayout layout = new LinearLayout(RateActivity.this);
+        layout.setOrientation(LinearLayout.HORIZONTAL);
+        layout.setBackground(rateBg);
+        layout.setLayoutParams(layoutParams);
 
-        TextView tv = new TextView( RateActivity.this );
-        tv.setText( nbuRate.getCc() );
-        tv.setLayoutParams( layoutParams );
-        layout.addView( tv );
+        TextView tv = new TextView(RateActivity.this);
+        tv.setText(nbuRate.getCc());
+        tv.setLayoutParams(layoutParams);
+        layout.addView(tv);
 
-        tv = new TextView( RateActivity.this );
-        tv.setLayoutParams( layoutParams );
-        tv.setText( getString( R.string.rate_rate_tpl, nbuRate.getRate() ) );
-        layout.addView( tv );
+        tv = new TextView(RateActivity.this);
+        tv.setLayoutParams(layoutParams);
+        tv.setText(getString(R.string.rate_rate_tpl, nbuRate.getRate()));
+        layout.addView(tv);
 
-        layout.setTag( nbuRate );
-        layout.setOnClickListener( this::onRateClick );
+        layout.setTag(nbuRate);
+        layout.setOnClickListener(this::onRateClick);
         return layout;
     }
 
-    private void onRateClick( View view ) {
-        if( view.getTag() instanceof NbuRate ) {
+    private void onRateClick(View view) {
+        if (view.getTag() instanceof NbuRate) {
             NbuRate nbuRate = (NbuRate) view.getTag();
             new AlertDialog.Builder(RateActivity.this)
-                    .setTitle( nbuRate.getTxt() )
-                    .setMessage( getString(
+                    .setTitle(nbuRate.getTxt())
+                    .setMessage(getString(
                             R.string.rate_alert_tpl,
-                            NbuRate.dateFormat.format( nbuRate.getExchangeDate() ),
-                            nbuRate.getRate() ) )
+                            nbuRate.getCc(),
+                            nbuRate.getR030(),
+                            NbuRate.dateDayMonthFormat.format(nbuRate.getExchangeDate()),
+                            nbuRate.getCc(),
+                            nbuRate.getRate())
+                    )
                     .show();
         }
-        /*
-        Курси валют:
-        Реалізувати повідомлення при натисненні "чіпси" за зразком:
-            Австралійський долар
-            Скорочена назва: AUD
-            Код R030: 36
-            Курс на 12.03: 1 AUD = ₴ 27.1342
-        Вивести дату на яку показано курс у складі загального інтерфейсу,
-          поза областю прокрутки (завжди видима)
-        Додати поле вибору дати, реалізувати зображення курсів на
-          вибрану користувачем дату (https://bank.gov.ua/ua/open-data/api-dev)
-         */
     }
 
-    private String readStreamToString( InputStream inputStream ) throws IOException {
+    private String readStreamToString(InputStream inputStream) throws IOException {
         byte[] buffer = new byte[4096];
         ByteArrayOutputStream byteBuilder = new ByteArrayOutputStream();
         int len;
-        while( ( len = inputStream.read( buffer ) ) > 0 ) {
-            byteBuilder.write( buffer, 0, len );
+        while ((len = inputStream.read(buffer)) > 0) {
+            byteBuilder.write(buffer, 0, len);
         }
-        return byteBuilder.toString() ;
+        return byteBuilder.toString();
+    }
+
+    private String formatDateForDisplay(Date date) {
+        SimpleDateFormat displayFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.getDefault());
+        return displayFormat.format(date);
     }
 }
-/*
-Робота з мережею Інтернет.
-Основу виконання запитів становить java.net.URL
-Він є аналогом File для доступу до файлів, у т.ч. в тому, що створення програмного
-об'єкту не виконує мережних дій.
-Реальне звернення до мережі відбувається при підключенні або відкритті потоку.
-І при цьому є ряд зауважень:
-- android.os.NetworkOnMainThreadException - всі запити мають здійснюватись асинхронно,
-    причому в окремому потоці.
-
-- java.lang.SecurityException: Permission denied (missing INTERNET permission?)
-    робота з мережею блокується дозволами. Запит на дозвіл включається до маніфесту.
-    <uses-permission android:name="android.permission.INTERNET"/>
-
-- android.view.ViewRootImpl$CalledFromWrongThreadException:
-    Only the original thread that created a view hierarchy can touch its views.
-    Для передачі роботи до основного потоку вживається метод runOnUiThread
- */
